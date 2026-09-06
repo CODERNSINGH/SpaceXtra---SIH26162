@@ -25,7 +25,12 @@ import httpx
 from app.config import settings
 
 FIRMS_BASE = "https://firms.modaps.eosdis.nasa.gov/api/area/csv"
-SOURCES = ["VIIRS_SNPP_NRT", "MODIS_NRT"]
+# Every NRT hotspot-detection sensor product FIRMS exposes for the area API.
+# (Landsat 30m has no NRT active-fire hotspot product in FIRMS — 16-day
+# revisit makes it unsuitable for "current" detections. It's a candidate for
+# a future higher-resolution *imagery* provider, same slot as Google Earth
+# Engine — see app/data_sources/imagery.py — not a hotspot source.)
+SOURCES = ["MODIS_NRT", "VIIRS_SNPP_NRT", "VIIRS_NOAA20_NRT", "VIIRS_NOAA21_NRT"]
 
 LogFn = Callable[[str], None]
 
@@ -39,7 +44,7 @@ def _row_id(lat: float, lon: float, acq_date: str, acq_time: str, satellite: str
     return hashlib.sha1(raw.encode()).hexdigest()[:16]
 
 
-def fetch_firms_hotspots(day_range: int = 1, log: LogFn = _noop_log) -> list[dict]:
+def fetch_firms_hotspots(day_range: int = 2, log: LogFn = _noop_log) -> list[dict]:
     """Fetch current India-wide hotspots. Real FIRMS if key present, else synthetic demo."""
     if not settings.FIRMS_MAP_KEY:
         log("[FIRMS] No FIRMS_MAP_KEY configured — using synthetic demo scatter (labeled).")

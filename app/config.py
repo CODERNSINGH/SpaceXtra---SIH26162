@@ -41,8 +41,11 @@ class Settings:
 
     LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO").strip()
 
-    # India bounding box used for the default FIRMS pull
-    INDIA_BBOX = (68.0, 6.5, 97.5, 35.5)  # west, south, east, north
+    # India bounding box used for the default FIRMS pull. North bound extended
+    # to 37.6 (not 35.5) to actually include all of Jammu & Kashmir and Ladakh
+    # up through the Siachen Glacier area — the tighter box was silently
+    # excluding real Indian territory from hotspot detection entirely.
+    INDIA_BBOX = (68.0, 6.5, 97.5, 37.6)  # west, south, east, north
 
     # Fusion weights (Layer 3) — documented, config-editable.
     # Must sum to 1.0. Change these to re-weight branch trust without
