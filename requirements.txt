@@ -1,0 +1,9 @@
+requests
+pillow
+numpy
+pandas
+scikit-learn
+matplotlib
+google-genai
+python-dotenv
+folium
