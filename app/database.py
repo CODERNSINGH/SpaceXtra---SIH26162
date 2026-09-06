@@ -45,6 +45,17 @@ CREATE TABLE IF NOT EXISTS thermal_events (
     created_at TEXT NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS industrial_facilities (
+    id TEXT PRIMARY KEY,
+    latitude REAL NOT NULL,
+    longitude REAL NOT NULL,
+    facility_type TEXT,
+    name TEXT,
+    fetched_at TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_facilities_latlon ON industrial_facilities (latitude, longitude);
+
 CREATE TABLE IF NOT EXISTS analyses (
     id TEXT PRIMARY KEY,
     event_id TEXT,
@@ -131,6 +142,43 @@ def get_analysis(analysis_id: str) -> dict | None:
         d = dict(row)
         d["result"] = json.loads(d.pop("result_json"))
         return d
+
+
+def delete_synthetic_hotspots() -> int:
+    with get_connection() as conn:
+        cur = conn.execute("DELETE FROM hotspots WHERE instrument = 'synthetic_demo'")
+        return cur.rowcount
+
+
+def save_industrial_facilities(rows: list[dict]) -> int:
+    if not rows:
+        return 0
+    with get_connection() as conn:
+        conn.executemany(
+            """
+            INSERT INTO industrial_facilities (id, latitude, longitude, facility_type, name, fetched_at)
+            VALUES (:id, :latitude, :longitude, :facility_type, :name, :fetched_at)
+            ON CONFLICT(id) DO UPDATE SET
+                facility_type=excluded.facility_type, name=excluded.name
+            """,
+            rows,
+        )
+    return len(rows)
+
+
+def clear_industrial_facilities() -> None:
+    with get_connection() as conn:
+        conn.execute("DELETE FROM industrial_facilities")
+
+
+def count_industrial_facilities() -> int:
+    with get_connection() as conn:
+        return conn.execute("SELECT COUNT(*) AS n FROM industrial_facilities").fetchone()["n"]
+
+
+def get_all_industrial_facilities() -> list[dict]:
+    with get_connection() as conn:
+        return [dict(r) for r in conn.execute("SELECT * FROM industrial_facilities").fetchall()]
 
 
 def list_analyses() -> list[dict]:

@@ -23,14 +23,14 @@ class Settings:
 
     # AI providers
     GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "").strip()
-    GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-1.5-flash").strip()
+    GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-flash-latest").strip()
 
     GROQ_API_KEY: str = os.getenv("GROQ_API_KEY", "").strip()
-    GROQ_MODEL: str = os.getenv("GROQ_MODEL", "llama-3.2-90b-vision-preview").strip()
+    GROQ_MODEL: str = os.getenv("GROQ_MODEL", "openai/gpt-oss-20b").strip()
 
     OPENROUTER_API_KEY: str = os.getenv("OPENROUTER_API_KEY", "").strip()
     OPENROUTER_MODEL: str = os.getenv(
-        "OPENROUTER_MODEL", "meta-llama/llama-3.2-11b-vision-instruct:free"
+        "OPENROUTER_MODEL", "minimax/minimax-m3:free"
     ).strip()
 
     GEE_SERVICE_ACCOUNT_JSON: str = os.getenv("GEE_SERVICE_ACCOUNT_JSON", "").strip()
