@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}ThermoWatch AI &mdash; India Thermal Hotspot Map{% endblock %}
+{% block content %}
+<div id="mainlayout">
+  <div id="mapcol">
+    <div class="panel" style="margin-bottom:0;">
+      <div class="panel-title">India-wide Thermal Hotspot Map (NASA FIRMS)</div>
+      <div class="controlrow">
+        <label for="startdate">From date:</label>
+        <input type="date" id="startdate">
+        <label for="enddate" style="width:70px;">To date:</label>
+        <input type="date" id="enddate">
+        <label for="riskmin" style="width:110px; margin-left:10px;">Min risk score:</label>
+        <input type="number" id="riskmin" min="0" max="100" value="0" style="width:50px;">
+        <button id="btnrefresh">REFRESH HOTSPOTS</button>
+        <span id="hotspotcount" style="margin-left:10px; font-family:'Courier New',monospace;"></span>
+      </div>
+      <div id="map"></div>
+      <div class="caption">
+        Click any marker to run the full multi-branch analysis pipeline for that thermal event.
+        Marker color: red = high FRP, orange = medium, yellow = low. Analyzed points are outlined blue.
+      </div>
+    </div>
+  </div>
+  <div id="sidecol">
+    <div class="panel">
+      <div class="panel-title">System Log</div>
+      <div id="logpanel">Awaiting first request...\n</div>
+    </div>
+    <div class="panel" id="selectedpanel">
+      <div class="panel-title">Selected Hotspot</div>
+      <div id="selectedinfo">No hotspot selected. Click a marker on the map.</div>
+    </div>
+  </div>
+</div>
+
+<div class="panel" id="analysispanel">
+  <div class="panel-title">Analysis Result</div>
+  <div id="analysiscontent"></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+<script src="/static/js/map.js"></script>
+{% endblock %}
