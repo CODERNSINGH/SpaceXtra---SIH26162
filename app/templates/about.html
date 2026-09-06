@@ -42,6 +42,12 @@
       <td>Add a temporal window to the clustering (currently spatial-only per fetch).</td>
     </tr>
     <tr>
+      <td>Industrial-facility filter (map + Branch B)</td>
+      <td>The default map view and Branch B's "distance to nearest facility" feature are both backed by a single real, named-facility index: live OpenStreetMap Overpass data (landuse=industrial, power plants, refineries, mines) fetched India-wide and cached locally.</td>
+      <td>Because the shared public Overpass instance rate-limits heavily under repeated load, a ~50-entry curated seed list of major real, named Indian industrial sites (Tata Steel Jamshedpur, Jamnagar Refinery, etc.) is loaded instantly at startup so the filter works immediately; Overpass enrichment runs in the background afterward and merges in. Seed coordinates are facility-scale approximations, not survey-grade.</td>
+      <td>A more complete, continuously-refreshed Overpass/GIS facility layer once running on dedicated (non-shared-rate-limited) infrastructure.</td>
+    </tr>
+    <tr>
       <td>Satellite/aerial image</td>
       <td>Real Esri World Imagery (primary) with automatic fallback to EOX Sentinel-2 Cloudless, fetched live for the clicked coordinate.</td>
       <td>A procedurally-generated placeholder image only if <em>both</em> real providers are unreachable &mdash; labeled <span class="tag simulated">synthetic_placeholder</span> in the API response.</td>
