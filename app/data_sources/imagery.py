@@ -136,7 +136,7 @@ def get_satellite_image(lat: float, lon: float, size_px: int = 512,
     cache_file = _cache_path(lat, lon)
     bbox = _bbox_for_point(lat, lon, half_width_m)
 
-    with httpx.Client(timeout=settings.HTTP_TIMEOUT_SECONDS, headers={"User-Agent": "ThermoWatchAI/1.0"}) as client:
+    with httpx.Client(timeout=settings.HTTP_TIMEOUT_SECONDS, headers={"User-Agent": "AGNIDRISHTI/1.0"}) as client:
         for provider in PROVIDER_CHAIN:
             try:
                 log(f"[IMAGERY] Trying {provider.name} for ({lat:.4f}, {lon:.4f})...")

@@ -8,7 +8,7 @@ from app.database import init_db
 from app.pipeline.industrial_index import start_background_build_if_needed
 from app.routes import pages, api
 
-app = FastAPI(title="ThermoWatch AI")
+app = FastAPI(title="AGNIDRISHTI")
 
 init_db()
 start_background_build_if_needed(log=print)

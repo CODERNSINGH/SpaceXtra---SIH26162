@@ -1,4 +1,4 @@
-# SOURCES.md — every external data/AI source used by ThermoWatch AI
+# SOURCES.md — every external data/AI source used by AGNIDRISHTI
 
 All sources below are real, currently operating, and free or free-tier. Nothing in this
 build depends on a paid service, a service requiring a credit card, or Google Earth Engine

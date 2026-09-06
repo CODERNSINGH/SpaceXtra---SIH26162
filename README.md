@@ -1,4 +1,4 @@
-# ThermoWatch AI
+# AGNIDRISHTI
 
 AI-based detection and classification of industrial fires and persistent thermal sources,
 using NASA FIRMS, OpenStreetMap, and satellite imagery. Built for SIH 2026, Problem

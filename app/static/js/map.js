@@ -1,4 +1,4 @@
-// ThermoWatch AI — map + status log + analysis wiring.
+// AGNIDRISHTI — map + status log + analysis wiring.
 
 const logPanel = document.getElementById('logpanel');
 const lastUpdatedEl = document.getElementById('lastupdated');

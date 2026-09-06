@@ -55,7 +55,7 @@ def nearest_industrial_facility(lat: float, lon: float, radius_m: int = 5000,
     """
     try:
         log(f"[OVERPASS] Querying nearest industrial facility within {radius_m}m...")
-        headers = {"User-Agent": "ThermoWatchAI/1.0 (SIH hackathon prototype)"}
+        headers = {"User-Agent": "AGNIDRISHTI/1.0 (SIH hackathon prototype)"}
         overpass_timeout = max(settings.HTTP_TIMEOUT_SECONDS, 20.0)
         with httpx.Client(timeout=overpass_timeout, headers=headers) as client:
             resp = client.post(OVERPASS_URL, data={"data": ql})

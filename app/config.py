@@ -1,5 +1,5 @@
 """
-Central configuration for ThermoWatch AI.
+Central configuration for AGNIDRISHTI.
 
 Everything that comes from the environment is read here, once, so the rest of
 the app never calls os.environ directly. Nothing here raises if a key is

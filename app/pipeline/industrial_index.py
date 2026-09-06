@@ -104,7 +104,7 @@ def _fetch_one_tag(key: str, value: str, bbox: str, client: httpx.Client, endpoi
 def fetch_india_industrial_facilities(log: LogFn = _noop_log) -> list[dict]:
     west, south, east, north = settings.INDIA_BBOX
     bbox = f"{south},{west},{north},{east}"
-    headers = {"User-Agent": "ThermoWatchAI/1.0 (SIH hackathon prototype)"}
+    headers = {"User-Agent": "AGNIDRISHTI/1.0 (SIH hackathon prototype)"}
     log("[INDUSTRIAL-INDEX] Fetching India-wide industrial facility list from Overpass, "
         f"one tag at a time ({len(INDUSTRIAL_QUERY_CLAUSES)} tags, one-time, then cached)...")
 
