@@ -8,26 +8,101 @@ See [`SOURCES.md`](SOURCES.md) for every external data/AI source used and whethe
 key, and the in-app [`/about`](http://127.0.0.1:8000/about) page for a plain, table-style
 breakdown of what's real vs. placeholder in this prototype.
 
-## Quick start
+## How to run — step by step
+
+**Prerequisites:** Python 3.10+ and `pip`. No database server, no Docker, no paid
+service of any kind is required.
+
+### 1. Get the code and go to the project folder
+
+If you haven't already, `cd` into the project directory (the one containing this
+README and `requirements.txt`).
+
+### 2. Create and activate a virtual environment
 
 ```bash
-# 1. Create and activate a virtual environment
 python3 -m venv venv
-source venv/bin/activate        # Windows: venv\Scripts\activate
 
-# 2. Install dependencies
+# macOS / Linux:
+source venv/bin/activate
+
+# Windows (PowerShell):
+venv\Scripts\Activate.ps1
+# Windows (cmd.exe):
+venv\Scripts\activate.bat
+```
+
+Your terminal prompt should now show `(venv)` at the start of the line.
+
+### 3. Install dependencies
+
+```bash
 pip install -r requirements.txt
+```
 
-# 3. Configure API keys (all optional — the app runs and degrades gracefully with none set)
+This installs FastAPI, uvicorn, scikit-learn, matplotlib, Pillow, httpx, and the rest —
+takes a minute or two on first install.
+
+### 4. Configure API keys (optional — the app runs with zero keys set)
+
+```bash
 cp .env.example .env
-# edit .env and fill in whichever keys you have — see .env.example for where to get each one free
+```
 
-# 4. Run
+Then open `.env` in a text editor and fill in whichever keys you have. Every key is
+free; none require a credit card. Leave any of them blank and that feature degrades
+gracefully (clear "NOT CONFIGURED" messaging in the UI/log) instead of crashing:
+
+| Variable | Get a free key at | Unlocks |
+|---|---|---|
+| `FIRMS_MAP_KEY` | https://firms.modaps.eosdis.nasa.gov/api/map_key/ (instant) | Live NASA FIRMS hotspots (otherwise a labeled synthetic demo scatter) |
+| `GEMINI_API_KEY` | https://aistudio.google.com/app/apikey | Branch A vision classification (primary engine) |
+| `GROQ_API_KEY` | https://console.groq.com/keys | Branch A ensemble provider #2 |
+| `OPENROUTER_API_KEY` | https://openrouter.ai/keys | Branch A ensemble provider #3 |
+
+**Never commit your `.env` file** — it's already listed in `.gitignore`. Only
+`.env.example` (with blank/placeholder values) should ever be committed.
+
+### 5. Run the server
+
+```bash
 uvicorn app.main:app --reload --port 8000
 ```
 
-Then open http://127.0.0.1:8000/ — you'll see a live map of India with thermal hotspots.
-Click any marker to run the full analysis pipeline for that point.
+You should see `Uvicorn running on http://127.0.0.1:8000`. Leave this terminal running —
+that's your server. (`--reload` is for development, so edits to the code restart the
+server automatically; drop it for a plain run.)
+
+> **First run only:** on startup the app seeds a small list of major Indian industrial
+> facilities instantly, then kicks off a one-time background fetch from OpenStreetMap to
+> enrich that list — this can take a couple of minutes. The "industrial facilities only"
+> map filter works immediately off the seed list while that finishes; watch the System
+> Log panel on the page, or check `GET /api/industrial-index/status`, to see progress.
+
+### 6. Open it in your browser
+
+Go to **http://127.0.0.1:8000/**. You should see a live map of India with thermal
+hotspots plotted. Click any marker to run the full multi-branch analysis pipeline for
+that point. Visit **http://127.0.0.1:8000/about** for the methodology/honesty page.
+
+### 7. Stop the server
+
+Press `Ctrl+C` in the terminal where uvicorn is running.
+
+### Troubleshooting
+
+- **Port already in use:** run with a different port, e.g. `--port 8001`, and open that
+  port in the browser instead.
+- **Want a totally clean slate** (hotspots, cached analyses, industrial-facility index):
+  stop the server and delete `data/thermowatch.db` — it's recreated automatically on the
+  next run.
+- **A vision provider (Gemini/Groq/OpenRouter) shows an error in the ensemble table:**
+  check the System Log panel for the specific message — free-tier model availability on
+  Groq/OpenRouter changes over time; see the notes in `.env.example` for how to find a
+  current vision-capable model and update `GROQ_MODEL` / `OPENROUTER_MODEL`.
+- **Industrial-facility index stuck at "building":** the public OpenStreetMap Overpass
+  API can be slow or rate-limited; the seed list already makes the map usable in the
+  meantime, and enrichment will pick up whenever Overpass responds.
 
 ## What works with zero configuration
 
