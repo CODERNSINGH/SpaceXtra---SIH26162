@@ -17,12 +17,30 @@ function logBatch(lines) {
 }
 
 // ---- map setup ----
-const map = L.map('map').setView([22.5, 80.0], 5);
+// Default base layer is satellite imagery (Esri World Imagery), not an
+// OpenStreetMap street map: OSM's standard raster tiles bake in disputed-
+// boundary line styling for the Kashmir region that we have no ability to
+// restyle (it's part of the raster image, not a separate layer we control).
+// Satellite imagery has no political boundary lines drawn on it at all, so
+// this sidesteps that entirely rather than us redrawing a disputed border
+// ourselves. OpenStreetMap street view stays available from the layer
+// control (top-right) for anyone who wants street/place-name context.
+const map = L.map('map').setView([22.5, 82.0], 5);
+
+const satelliteLayer = L.tileLayer(
+  'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+  { attribution: 'Esri, Maxar, Earthstar Geographics', maxZoom: 18 }
+).addTo(map);
 
 const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   attribution: '&copy; OpenStreetMap contributors',
   maxZoom: 18,
-}).addTo(map);
+});
+
+L.control.layers({
+  'Satellite (no borders drawn)': satelliteLayer,
+  'Street map (OpenStreetMap)': osmLayer,
+}, {}, { position: 'topright', collapsed: false }).addTo(map);
 
 let hotspotLayer = L.layerGroup().addTo(map);
 let markerById = {};
