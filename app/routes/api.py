@@ -39,7 +39,7 @@ def api_hotspots(
     end_date: str | None = Query(None),
     refresh: bool = Query(True, description="Re-fetch from FIRMS (or synthetic fallback) before returning"),
     industrial_only: bool = Query(True, description="Keep only hotspots near a known OSM industrial facility"),
-    radius_km: float = Query(5.0, description="Proximity radius (km) used by industrial_only"),
+    radius_km: float = Query(8.0, description="Proximity radius (km) used by industrial_only"),
 ):
     log: list[str] = []
 
