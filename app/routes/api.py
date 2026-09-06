@@ -10,8 +10,12 @@ from app.data_sources.firms import fetch_firms_hotspots
 from app.data_sources.imagery import get_satellite_image
 from app.data_sources.overpass import nearest_industrial_facility
 from app.data_sources.power import get_recent_weather_soil
-from app.database import upsert_hotspots, get_hotspots, save_analysis, list_analyses
+from app.database import upsert_hotspots, get_hotspots, save_analysis, list_analyses, delete_synthetic_hotspots
 from app.pipeline.clustering import cluster_hotspots_into_events, find_event_for_point
+from app.pipeline.industrial_index import (
+    filter_hotspots_near_industry, start_background_build_if_needed, nearest_facility_for_point,
+)
+from app.database import count_industrial_facilities
 from app.processing.image_ops import build_image_gallery
 from app.branches.vision import run_vision_branch
 from app.branches.context_model import get_context_model, FEATURE_COLUMNS
@@ -34,6 +38,8 @@ def api_hotspots(
     start_date: str | None = Query(None),
     end_date: str | None = Query(None),
     refresh: bool = Query(True, description="Re-fetch from FIRMS (or synthetic fallback) before returning"),
+    industrial_only: bool = Query(True, description="Keep only hotspots near a known OSM industrial facility"),
+    radius_km: float = Query(5.0, description="Proximity radius (km) used by industrial_only"),
 ):
     log: list[str] = []
 
@@ -47,17 +53,27 @@ def api_hotspots(
         is_synthetic = bool(rows) and rows[0].get("source") == "synthetic_demo"
         n = upsert_hotspots([{k: v for k, v in r.items() if k != "source"} for r in rows])
         _log(f"[DB] Upserted {n} hotspot rows into local store.")
+        if not is_synthetic:
+            removed = delete_synthetic_hotspots()
+            if removed:
+                _log(f"[DB] Removed {removed} stale synthetic-demo rows now that live FIRMS data is available.")
         events = cluster_hotspots_into_events(rows, log=_log)
     else:
         is_synthetic = False
 
     stored = get_hotspots(start_date, end_date)
+
+    if industrial_only:
+        _log(f"[PIPELINE] Filtering to hotspots within {radius_km}km of a known industrial facility...")
+        stored = filter_hotspots_near_industry(stored, radius_km, log=_log)
+
     _log(f"[PIPELINE] Returning {len(stored)} hotspots for map render.")
 
     return {
         "hotspots": stored,
         "count": len(stored),
         "is_synthetic_demo": is_synthetic,
+        "industrial_only": industrial_only,
         "last_updated_utc": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S"),
         "log": log,
     }
@@ -87,15 +103,22 @@ def api_analyze(req: AnalyzeRequest):
     vision = run_vision_branch(imagery_result.image, lat, lon, log=_log)
 
     # --- Branch B: Context/Tabular ---
-    _log("[PIPELINE] Branch B (Context): querying Overpass + NASA POWER...")
-    facility = nearest_industrial_facility(lat, lon, log=_log)
+    _log("[PIPELINE] Branch B (Context): resolving nearest industrial facility + NASA POWER...")
+    # Prefer the local cached industrial-facility index (same one the map
+    # filter uses) over a live per-point Overpass call: it's instant and
+    # doesn't depend on the shared public Overpass instance being reachable
+    # at analysis time (it frequently isn't, under rate limits).
+    facility = nearest_facility_for_point(lat, lon, log=_log)
+    if facility.get("status") != "ok":
+        _log("[BRANCH-B] Local industrial index unavailable — falling back to a live Overpass query.")
+        facility = nearest_industrial_facility(lat, lon, log=_log)
     weather = get_recent_weather_soil(lat, lon, log=_log)
     facility_type = facility.get("facility_type") or ""
     features = {
         "distance_m": facility.get("distance_m") if facility.get("found") else 6000.0,
-        "is_industrial": 1 if facility_type == "industrial" else 0,
-        "is_refinery_power": 1 if facility_type in ("power",) else 0,
-        "is_mine": 1 if facility_type == "mine" else 0,
+        "is_industrial": 1 if facility_type in ("industrial", "steel") else 0,
+        "is_refinery_power": 1 if facility_type in ("power", "refinery") else 0,
+        "is_mine": 1 if facility_type in ("mine", "quarry") else 0,
         "frp": req.frp or 5.0,
         "brightness": 320.0,
         "soil_moisture": weather.get("soil_moisture") if weather.get("soil_moisture") is not None else 0.35,
@@ -178,6 +201,20 @@ def api_analyze(req: AnalyzeRequest):
     _log("[PIPELINE] Analysis complete and saved.")
 
     return {"analysis_id": analysis_id, "result": result, "log": log}
+
+
+@router.get("/industrial-index/status")
+def api_industrial_index_status():
+    from app.pipeline.industrial_index import _build_in_progress
+    n = count_industrial_facilities()
+    return {"cached_facility_count": n, "build_in_progress": _build_in_progress, "ready": n > 0}
+
+
+@router.post("/industrial-index/build")
+def api_industrial_index_build(force: bool = Query(False)):
+    log: list[str] = []
+    started = start_background_build_if_needed(log=log.append, force=force)
+    return {"started_or_already_running": started, "log": log}
 
 
 @router.get("/analyses")

@@ -65,8 +65,11 @@ function plotHotspots(hotspots) {
       fillColor: frpColor(h.frp),
       fillOpacity: 0.85,
     });
+    const facilityLine = h.nearest_facility_name
+      ? `<br>Nearest facility: ${h.nearest_facility_name} (${h.nearest_facility_type}), ${h.nearest_facility_m}m`
+      : '';
     marker.bindTooltip(
-      `FRP: ${h.frp ?? 'n/a'} | Brightness: ${h.brightness ?? 'n/a'} | ${h.acq_date} ${h.acq_time || ''}`
+      `FRP: ${h.frp ?? 'n/a'} | Brightness: ${h.brightness ?? 'n/a'} | ${h.acq_date} ${h.acq_time || ''}${facilityLine}`
     );
     marker.on('click', () => onHotspotClick(h, marker));
     marker.addTo(hotspotLayer);
@@ -99,11 +102,21 @@ document.getElementById('riskmin').addEventListener('change', applyRiskFilter);
 async function refreshHotspots() {
   const start = document.getElementById('startdate').value;
   const end = document.getElementById('enddate').value;
-  const params = new URLSearchParams({ refresh: 'true' });
+  const industrialOnly = document.getElementById('industrialonly').checked;
+  const radiusKm = document.getElementById('radiuskm').value || '5';
+  const params = new URLSearchParams({
+    refresh: 'true',
+    industrial_only: industrialOnly ? 'true' : 'false',
+    radius_km: radiusKm,
+  });
   if (start) params.set('start_date', start);
   if (end) params.set('end_date', end);
 
-  logLine('> Requesting hotspot refresh from server...');
+  if (industrialOnly) {
+    logLine(`> Requesting hotspot refresh (industrial facilities only, within ${radiusKm}km)... this can take up to a minute the first time while the industrial facility index builds.`);
+  } else {
+    logLine('> Requesting hotspot refresh (all detections, no industrial filter)...');
+  }
   try {
     const resp = await fetch(`/api/hotspots?${params.toString()}`);
     const data = await resp.json();
@@ -119,6 +132,7 @@ async function refreshHotspots() {
 }
 
 document.getElementById('btnrefresh').addEventListener('click', refreshHotspots);
+document.getElementById('industrialonly').addEventListener('change', refreshHotspots);
 
 // ---- selection / analysis ----
 const selectedInfo = document.getElementById('selectedinfo');
@@ -281,5 +295,35 @@ function renderEnsembleTable(ensemble) {
   return `<table class="datatable"><tr><th>Provider</th><th>Classification</th><th>Confidence</th><th>Evidence</th></tr>${rows}</table>`;
 }
 
+// ---- industrial facility index status polling ----
+const indexStatusEl = document.getElementById('indexstatus');
+let indexWasBuilding = false;
+
+async function pollIndustrialIndexStatus() {
+  try {
+    const resp = await fetch('/api/industrial-index/status');
+    const data = await resp.json();
+    if (data.build_in_progress) {
+      indexWasBuilding = true;
+      indexStatusEl.textContent = `[building industrial facility index in background... ${data.cached_facility_count} cached so far]`;
+      setTimeout(pollIndustrialIndexStatus, 8000);
+    } else if (data.ready) {
+      indexStatusEl.style.color = '#205723';
+      indexStatusEl.textContent = `[industrial index ready: ${data.cached_facility_count} facilities cached]`;
+      if (indexWasBuilding) {
+        logLine(`[INDUSTRIAL-INDEX] Build finished (${data.cached_facility_count} facilities cached). Refreshing hotspots with the filter applied...`);
+        indexWasBuilding = false;
+        refreshHotspots();
+      }
+    } else {
+      indexStatusEl.textContent = '[industrial index not built yet]';
+      setTimeout(pollIndustrialIndexStatus, 8000);
+    }
+  } catch (e) {
+    // non-fatal — just stop polling silently
+  }
+}
+
 // initial load
 loadPriorAnalyses().then(refreshHotspots);
+pollIndustrialIndexStatus();
