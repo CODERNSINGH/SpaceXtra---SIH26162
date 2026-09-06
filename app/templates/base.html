@@ -3,22 +3,32 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>{% block title %}ThermoWatch AI{% endblock %}</title>
+<title>{% block title %}AGNIDRISHTI{% endblock %}</title>
 <link rel="stylesheet" href="/static/css/style.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css">
 {% block head %}{% endblock %}
 </head>
 <body>
 <div id="topbanner">
-  <div>
-    <span class="title">THERMOWATCH AI</span>
-    &nbsp;<span class="subtitle">Industrial Fire &amp; Persistent Thermal Source Detection &mdash; SIH PS 26162</span>
+  <img src="/static/img/satellite-generic.png" alt="" class="banner-bg-sat">
+  <div class="brand">
+    <img src="/static/img/satellite-tess.png" alt="Satellite" class="brand-sat-icon">
+    <div class="brand-text">
+      <div class="title">AGNIDRISHTI <span class="devanagari">&#2309;&#2327;&#2381;&#2344;&#2367;&#2342;&#2371;&#2359;&#2381;&#2335;&#2367;</span></div>
+      <div class="subtitle">AI-Based Industrial Fire &amp; Persistent Thermal Source Detection System &mdash; SIH 2026, PS 26162</div>
+    </div>
   </div>
-  <nav>
-    <a href="/">MAP</a>
-    <a href="/about">METHODOLOGY / ABOUT</a>
-    <a href="https://firms.modaps.eosdis.nasa.gov/" target="_blank" rel="noopener">NASA FIRMS &#8599;</a>
-  </nav>
+  <div class="banner-right">
+    <nav>
+      <a href="/">MAP</a>
+      <a href="/about">METHODOLOGY / ABOUT</a>
+      <a href="https://firms.modaps.eosdis.nasa.gov/" target="_blank" rel="noopener">NASA FIRMS &#8599;</a>
+    </nav>
+    <div class="data-badge">
+      <img src="/static/img/nasa-logo.png" alt="NASA" class="nasa-logo">
+      <span>Hotspot data: NASA FIRMS (MODIS &amp; VIIRS)</span>
+    </div>
+  </div>
 </div>
 <div id="statusstrip">
   Last updated: <span id="lastupdated">{{ now_utc }}</span> UTC &nbsp;|&nbsp;
@@ -29,7 +39,7 @@
 {% block content %}{% endblock %}
 
 <footer id="footbar">
-  ThermoWatch AI &mdash; hackathon prototype. Data: NASA FIRMS, OpenStreetMap Overpass, NASA POWER, Esri World Imagery, EOX Sentinel-2 Cloudless.
+  AGNIDRISHTI &mdash; hackathon prototype. Data: NASA FIRMS, OpenStreetMap Overpass, NASA POWER, Esri World Imagery, EOX Sentinel-2 Cloudless.
   See <a href="/about">/about</a> (or <code>SOURCES.md</code> in the repository) for what's real vs. placeholder.
 </footer>
 </body>

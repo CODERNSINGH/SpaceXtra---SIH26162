@@ -1,4 +1,4 @@
-/* ThermoWatch AI — deliberately old-school operational science tool styling.
+/* AGNIDRISHTI — deliberately old-school operational science tool styling.
    No gradients, no rounded pills, no shadows, no animated transitions. */
 
 * { box-sizing: border-box; }
@@ -18,28 +18,87 @@ a:hover { color: #cc0000; }
 
 /* ---- top banner ---- */
 #topbanner {
+  position: relative;
+  overflow: hidden;
   background: #0b2e4f;
   color: #fff;
-  padding: 6px 10px;
+  padding: 8px 14px;
   border-bottom: 3px solid #d4a017;
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
-#topbanner .title {
-  font-weight: bold;
-  font-size: 16px;
-  letter-spacing: 0.5px;
+/* faint decorative satellite watermark — behind all banner content */
+#topbanner .banner-bg-sat {
+  position: absolute;
+  right: -10px;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 180%;
+  width: auto;
+  opacity: 0.10;
+  z-index: 0;
+  pointer-events: none;
 }
-#topbanner .subtitle {
+#topbanner .brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  position: relative;
+  z-index: 1;
+}
+#topbanner .brand-sat-icon {
+  height: 42px;
+  width: auto;
+}
+#topbanner .brand-text .title {
+  font-weight: bold;
+  font-size: 19px;
+  letter-spacing: 1px;
+}
+#topbanner .brand-text .title .devanagari {
+  font-size: 13px;
+  font-weight: normal;
+  color: #d4a017;
+  margin-left: 6px;
+  letter-spacing: 0;
+}
+#topbanner .brand-text .subtitle {
   font-size: 10px;
   color: #cdd8e3;
+  margin-top: 1px;
+}
+#topbanner .banner-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 5px;
+  position: relative;
+  z-index: 1;
 }
 #topbanner nav a {
   color: #fff;
   margin-left: 14px;
   font-size: 11px;
   text-decoration: underline;
+}
+#topbanner .data-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  color: #cdd8e3;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  padding: 2px 8px;
+}
+#topbanner .data-badge .nasa-logo {
+  height: 18px;
+  width: auto;
+}
+@media (max-width: 900px) {
+  #topbanner { flex-wrap: wrap; }
+  #topbanner .banner-bg-sat { display: none; }
 }
 
 /* ---- status strip ---- */
