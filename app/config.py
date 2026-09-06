@@ -26,7 +26,7 @@ class Settings:
     GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-flash-latest").strip()
 
     GROQ_API_KEY: str = os.getenv("GROQ_API_KEY", "").strip()
-    GROQ_MODEL: str = os.getenv("GROQ_MODEL", "openai/gpt-oss-20b").strip()
+    GROQ_MODEL: str = os.getenv("GROQ_MODEL", "qwen/qwen3.8-27b").strip()
 
     OPENROUTER_API_KEY: str = os.getenv("OPENROUTER_API_KEY", "").strip()
     OPENROUTER_MODEL: str = os.getenv(

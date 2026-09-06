@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import json
 import re
+import time
 from abc import ABC, abstractmethod
 from typing import Callable
 
@@ -127,6 +128,7 @@ class GroqProvider(VisionProvider):
                     {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{image_b64_png}"}},
                 ],
             }],
+            "max_tokens": 400,  # a short JSON verdict only — keeps us clear of per-minute output-token caps
         }
         resp = client.post(url, json=body, headers=headers)
         resp.raise_for_status()
@@ -153,6 +155,7 @@ class OpenRouterProvider(VisionProvider):
                     {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{image_b64_png}"}},
                 ],
             }],
+            "max_tokens": 400,  # a short JSON verdict only — keeps us clear of per-minute output-token caps
         }
         resp = client.post(url, json=body, headers=headers)
         resp.raise_for_status()
@@ -199,6 +202,28 @@ def _to_probabilities(classification: str, confidence: float) -> dict[str, float
 
 
 VISION_TIMEOUT_SECONDS = 25.0  # image+prompt calls run measurably slower than the generic text-API timeout
+TRANSIENT_STATUS_CODES = {429, 500, 502, 503, 504}  # rate-limited / overloaded — worth one retry, not a hard failure
+RETRY_DELAY_SECONDS = 2.5
+
+
+def _classify_with_retry(provider: "VisionProvider", image_b64: str, lat: float, lon: float,
+                          client: httpx.Client, log: LogFn):
+    """One retry on transient provider overload (e.g. Gemini's "high demand"
+    503) — these are explicitly temporary per the provider's own error text,
+    not a configuration problem, so a single short-delayed retry is the
+    honest response rather than immediately surfacing it as a failure."""
+    last_error: Exception | None = None
+    for attempt in range(2):
+        try:
+            return provider.classify(image_b64, lat, lon, client)
+        except httpx.HTTPStatusError as e:
+            last_error = e
+            if e.response.status_code not in TRANSIENT_STATUS_CODES or attempt == 1:
+                raise
+            log(f"[VISION:{provider.name}] HTTP {e.response.status_code} (transient) — retrying once in "
+                f"{RETRY_DELAY_SECONDS}s...")
+            time.sleep(RETRY_DELAY_SECONDS)
+    raise last_error  # pragma: no cover — loop always returns or raises above
 
 
 def run_vision_branch(image: Image.Image, lat: float, lon: float, log: LogFn = _noop_log) -> dict:
@@ -212,7 +237,7 @@ def run_vision_branch(image: Image.Image, lat: float, lon: float, log: LogFn = _
                 continue
             try:
                 log(f"[VISION:{provider.name}] Sending image + prompt for classification...")
-                result = provider.classify(image_b64, lat, lon, client)
+                result = _classify_with_retry(provider, image_b64, lat, lon, client, log)
                 classification = result.get("classification", "unknown")
                 confidence = float(result.get("confidence", 0.5))
                 evidence = result.get("evidence", [])
